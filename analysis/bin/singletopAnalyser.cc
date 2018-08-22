@@ -1194,7 +1194,7 @@ int singletopAnalyser::RunEvt() {
   
   //nRes = ObjectSelection();
   nRes = EventSelection();
-  if ( nRes < 2 ) return 1;
+  if ( nRes < 4 ) return 1;
   //if ( !( b_trig_m != 0 || b_trig_e != 0 ) ) return 1; // Already in EventSelection()
   
   b_met_sumEt = MET_sumEt;
