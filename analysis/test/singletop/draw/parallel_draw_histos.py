@@ -258,13 +258,6 @@ else:
       if not arg.startswith(strPathDraw): strPathListSet = os.path.join(strPathDraw, arg)
       else:                               strPathListSet = arg
   
-  weight = ""
-  if "g" in strWeighthead: weight += " * genweight"
-  if "p" in strWeighthead: weight += " * puweight"
-  if "m" in strWeighthead: weight += " * mueffweight"
-  if "b" in strWeighthead: weight += " * btagweight"
-  weight = weight[ 3: ] if weight != "" else "1.0"
-  
   if nStep > 0: cut += " && step >= %i"%nStep
   
   if channel != 0: 
@@ -276,7 +269,14 @@ else:
       cut += " && trig_m > 0"
       cut += " && lep_pid == %s13"%strSign if not bAllcharge else " && abs(lep_pid) == 13"
     if abs(channel) == 3: 
-      cut += " && ( lep_pid == %s11 || lep_pid == %s113)"%(strSign, strSign)
+      cut += " && ( lep_pid == %s11 || lep_pid == %s13)"%(strSign, strSign)
+  
+  weight = ""
+  if "g" in strWeighthead: weight += " * genweight"
+  if "p" in strWeighthead: weight += " * puweight"
+  if "m" in strWeighthead: weight += " * %seffweight"%("el" if abs(channel) == 1 else "mu")
+  if "b" in strWeighthead: weight += " * btagweight"
+  weight = weight[ 3: ] if weight != "" else "1.0"
   
   cut += " && ( " + strCutAdd + " )" if len(strCutAdd) > 0 else ""
   cut = cut[ 4: ]
