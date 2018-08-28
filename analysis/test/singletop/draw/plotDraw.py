@@ -130,9 +130,14 @@ for strKey in dicSet.keys():
   
   dicSet[ strKey ][ "hist" ].Add(histLoad)
   
-  dicSet[ strKey ][ "entries" ] += float(fRoot.Get("entries").GetTitle())
-  dicSet[ strKey ][ "step0" ] += float(fRoot.Get("step0").GetTitle())
-  dicSet[ strKey ][ "step1" ] += float(fRoot.Get("step1").GetTitle())
+  if not not fRoot.Get("entries"): # For legacy
+    dicSet[ strKey ][ "entries" ] += float(fRoot.Get("entries").GetTitle())
+    dicSet[ strKey ][ "step0" ] += float(fRoot.Get("step0").GetTitle())
+    dicSet[ strKey ][ "step1" ] += float(fRoot.Get("step1").GetTitle())
+  else: 
+    dicSet[ strKey ][ "entries" ] += float(fRoot.Get(strNameRoot + "_nevents").GetBinContent(2))
+    dicSet[ strKey ][ "step0" ] += float(fRoot.Get(strNameRoot + "_cutFlow").GetBinContent(1))
+    dicSet[ strKey ][ "step1" ] += float(fRoot.Get(strNameRoot + "_cutFlow").GetBinContent(2))
   
   fRoot.Close()
   
