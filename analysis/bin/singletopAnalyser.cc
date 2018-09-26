@@ -42,6 +42,9 @@ private:
   int m_nBkgType;
   Bool_t m_isFullGen;
   
+  Int_t b_bjetGen_isMatched;
+  Float_t b_maxBDiscr_nonbInGen;
+  
   Int_t m_nIdxGenTop, m_nIdxGenAssoQ, m_nIdxGenLep, m_nIdxGenBFromT, m_nIdxGenW;
   Int_t m_nIDGenLep;
   
@@ -79,6 +82,8 @@ private:
   TLorentzVector b_ttbar_lep2;
   Float_t b_ttbar_lep1_deltaRGen, b_ttbar_lep2_deltaRGen;
   Float_t b_ttbar_lep1_reliso, b_ttbar_lep2_reliso;
+  
+  Int_t b_ttbar_nGenBJet;
   
   TLorentzVector b_lep2NonIso;
   Int_t b_lep2NonIso_pid;
@@ -119,6 +124,14 @@ private:
   Int_t b_nsubjet;
   
   Int_t b_nhadcand;
+  Float_t b_hadcand_sumPt;
+  Float_t b_hadcand_sumPtLxy, b_hadcand_sumPtL3D;
+  
+  Float_t b_hadcand_sumLxy, b_hadcand_sumL3D;
+  
+  Int_t b_nK0Scand, b_nK0Scand02, b_nK0Scand01;
+  Float_t b_K0Scand_sumLxy, b_K0Scand_sumLxy02, b_K0Scand_sumLxy01;
+  Float_t b_K0Scand_sumPt, b_K0Scand_sumPt02, b_K0Scand_sumPt01;
   
   Float_t b_cos_star_gen;
   Float_t b_cos_star_bjet_gen;
@@ -172,6 +185,8 @@ public:
   ~singletopAnalyser();
   virtual void     Loop();
   
+  Int_t SeekFirstGenPart(Int_t nIdx);
+  
   int DoMoreGenLvl(TLorentzVector &vec4Top, TLorentzVector &vec4Lep, TLorentzVector &vec4AssoQ);
   int RunEvt();
   
@@ -195,11 +210,14 @@ public:
   int GetGenInfoSTOthers();
   
   int GetJets();
+  int GetJetAndHadronCandInfo();
   int CalcSphericity();
   
   TLorentzVector RecoWFromTop(double *pdDiffMET, int nFlag = MY_FLAG_RECOW_WRESTRICTION);
   int RecoTop();
   int CalcRecoCosStar();
+  
+  int GetTMVATable();
 };
 
 
@@ -260,6 +278,10 @@ void singletopAnalyser::MakeBranch(TTree *t) {
   t->Branch("gentop1", "TLorentzVector", &b_gentop1);
   t->Branch("genW", "TLorentzVector", &b_genW);
   
+  t->Branch("bjetGen_isMatched", &b_bjetGen_isMatched, "bjetGen_isMatched/I");
+  t->Branch("maxBDiscr_nonb", &b_maxBDiscr_nonb, "maxBDiscr_nonb/F");
+  t->Branch("maxBDiscr_nonbInGen", &b_maxBDiscr_nonbInGen, "maxBDiscr_nonbInGen/F");
+  
   t->Branch("ttbar_gentop2", "TLorentzVector", &b_ttbar_gentop2);
   t->Branch("ttbar_genW2", "TLorentzVector", &b_ttbar_genW2);
   
@@ -282,6 +304,8 @@ void singletopAnalyser::MakeBranch(TTree *t) {
   t->Branch("ttbar_lep2_deltaRGen", &b_ttbar_lep2_deltaRGen, "ttbar_lep2_deltaRGen/F");
   t->Branch("ttbar_lep1_reliso", &b_ttbar_lep1_reliso, "ttbar_lep1_reliso/F");
   t->Branch("ttbar_lep2_reliso", &b_ttbar_lep2_reliso, "ttbar_lep2_reliso/F");
+  
+  t->Branch("ttbar_nGenBJet", &b_ttbar_nGenBJet, "ttbar_nGenBJet/I");
   
   t->Branch("lep", "TLorentzVector", &b_lep);
   t->Branch("jet1", "TLorentzVector", &b_jet1);
@@ -337,6 +361,24 @@ void singletopAnalyser::MakeBranch(TTree *t) {
   t->Branch("nsubjet", &b_nsubjet, "nsubjet/I");
   
   t->Branch("nhadcand", &b_nhadcand, "nhadcand/I");
+  t->Branch("hadcand_sumPt", &b_hadcand_sumPt, "hadcand_sumPt/F");
+  t->Branch("hadcand_sumPtLxy", &b_hadcand_sumPtLxy, "hadcand_sumPtLxy/F");
+  t->Branch("hadcand_sumPtL3D", &b_hadcand_sumPtL3D, "hadcand_sumPtL3D/F");
+  
+  t->Branch("hadcand_sumLxy", &b_hadcand_sumLxy, "hadcand_sumLxy/F");
+  t->Branch("hadcand_sumL3D", &b_hadcand_sumL3D, "hadcand_sumL3D/F");
+  
+  t->Branch("nK0Scand", &b_nK0Scand, "nK0Scand/I");
+  t->Branch("K0Scand_sumLxy", &b_K0Scand_sumLxy, "K0Scand_sumLxy/F");
+  t->Branch("K0Scand_sumPt", &b_K0Scand_sumPt, "K0Scand_sumPt/F");
+  
+  t->Branch("nK0Scand02", &b_nK0Scand02, "nK0Scand02/I");
+  t->Branch("K0Scand_sumLxy02", &b_K0Scand_sumLxy02, "K0Scand_sumLxy02/F");
+  t->Branch("K0Scand_sumPt02", &b_K0Scand_sumPt02, "K0Scand_sumPt02/F");
+  
+  t->Branch("nK0Scand01", &b_nK0Scand01, "nK0Scand01/I");
+  t->Branch("K0Scand_sumLxy01", &b_K0Scand_sumLxy01, "K0Scand_sumLxy01/F");
+  t->Branch("K0Scand_sumPt01", &b_K0Scand_sumPt01, "K0Scand_sumPt01/F");
   
   t->Branch("trig_m_trk", &b_trig_m_trk, "trig_m_trk/I");
   t->Branch("trig_m_global", &b_trig_m_global, "trig_m_global/I");
@@ -385,6 +427,9 @@ void singletopAnalyser::resetBranch() {
   b_gentop1.SetPtEtaPhiM(0, 0, 0, 0);
   b_genW.SetPtEtaPhiM(0, 0, 0, 0);
   
+  b_bjetGen_isMatched = 0;
+  b_maxBDiscr_nonbInGen = -9;
+  
   b_ttbar_gentop2.SetPtEtaPhiM(0, 0, 0, 0);
   b_ttbar_genW2.SetPtEtaPhiM(0, 0, 0, 0);
   
@@ -404,6 +449,8 @@ void singletopAnalyser::resetBranch() {
   b_ttbar_lep2.SetPtEtaPhiM(0, 0, 0, 0);
   b_ttbar_lep1_deltaRGen = b_ttbar_lep2_deltaRGen = 0;
   b_ttbar_lep1_reliso = b_ttbar_lep2_reliso = 0;
+  
+  b_ttbar_nGenBJet = 0;
   
   b_jet1.SetPtEtaPhiM(0, 0, 0, 0);
   b_bjet1.SetPtEtaPhiM(0, 0, 0, 0);
@@ -449,6 +496,13 @@ void singletopAnalyser::resetBranch() {
   b_nsubjet = -1;
   
   b_nhadcand = 0;
+  b_hadcand_sumPt = -999.0;
+  b_hadcand_sumPtLxy = b_hadcand_sumPtL3D = -999.0;
+  b_hadcand_sumLxy = b_hadcand_sumL3D = -999.0;
+  
+  b_nK0Scand = b_nK0Scand02 = b_nK0Scand01 = 0;
+  b_K0Scand_sumPt = b_K0Scand_sumPt02 = b_K0Scand_sumPt01 = -999.0;
+  b_K0Scand_sumLxy = b_K0Scand_sumLxy02 = b_K0Scand_sumLxy01 = -999.0;
   
   b_cos_star_gen = b_cos_star_bjet_gen = -2;
   b_cos_labf_gen = b_cos_labf_bjet_gen = -2;
@@ -622,6 +676,23 @@ int singletopAnalyser::GetIdxGenNeutrino() {
   }
   
   return ( i < nGenPart ? 0 : -1 );
+}
+
+
+Int_t singletopAnalyser::SeekFirstGenPart(Int_t nIdx) {
+  Int_t nID = GenPart_pdgId[ nIdx ];
+  Int_t nIdxMother;
+  
+  while ( nIdx >= 0 ) {
+    nIdxMother = GenPart_genPartIdxMother[ nIdx ];
+    if ( m_nEventIdx == 96114 ) {
+      printf("Seek: %i, %i\n", nIdx, nIdxMother);
+    }
+    if ( nIdxMother >= 0 && GenPart_pdgId[ nIdxMother ] != nID ) break;
+    nIdx = nIdxMother;
+  }
+  
+  return nIdx;
 }
 
 
@@ -853,7 +924,7 @@ int singletopAnalyser::GetLeptonInfoMatching() {
       }
     }
     
-    if ( nIdxFound >= 0 ) { // When muon is Found
+    if ( nIdxFound >= 0 ) { // When muon is found
       //printf("%i\n", nIdxFound);
     } else { // No matching reco lepton
       b_ttbar_missedlep++;
@@ -1153,6 +1224,135 @@ int singletopAnalyser::RecoTop() {
 }
 
 
+int singletopAnalyser::GetJetAndHadronCandInfo() {
+  Double_t dCutLine = 0.15;
+  
+  Double_t dAvgL3D, dSumErrL3D, dErrAvgL3D;
+  
+  double dDRMin = 1048576.0;
+  UInt_t unIdxMatched = 0;
+  
+  for ( UInt_t i = 0 ; i < nJet ; i++ ) {
+    TLorentzVector vec4Jet;
+    vec4Jet.SetPtEtaPhiM(Jet_pt[ i ], Jet_eta[ i ], Jet_phi[ i ], Jet_mass[ i ]);
+    double dDR = vec4Jet.DeltaR(b_bjet1);
+    
+    if ( dDRMin > dDR ) {
+      dDRMin = dDR;
+      unIdxMatched = i;
+    }
+  }
+  
+  b_bjetGen_isMatched = ( abs(GenJet_partonFlavour[ Jet_genJetIdx[ unIdxMatched ] ]) == 5 || 
+    abs(GenJet_hadronFlavour[ Jet_genJetIdx[ unIdxMatched ] ]) == 5 ? 1 : 0 );
+  
+  b_ttbar_nGenBJet = 0;
+  b_maxBDiscr_nonbInGen = -1;
+  
+  for ( UInt_t i = 0 ; i < nJet ; i++ ) {
+    UInt_t unPartonFlavor = abs(GenJet_partonFlavour[ Jet_genJetIdx[ i ] ]);
+    UInt_t unHadronFlavor = abs(GenJet_hadronFlavour[ Jet_genJetIdx[ i ] ]);
+    
+    if ( unPartonFlavor == 5 || unHadronFlavor == 5 ) {
+      b_ttbar_nGenBJet++;
+      
+      if ( i != unIdxMatched && b_maxBDiscr_nonbInGen < Jet_btagCSVV2[ i ] ) {
+        b_maxBDiscr_nonbInGen = Jet_btagCSVV2[ i ];
+      }
+    }
+  }
+  
+  b_nhadcand = 0;
+  b_hadcand_sumPt = 0;
+  b_hadcand_sumPtLxy = 0;
+  b_hadcand_sumPtL3D = 0;
+  b_hadcand_sumLxy = 0;
+  b_hadcand_sumL3D = 0;
+  
+  b_nK0Scand = b_nK0Scand01 = b_nK0Scand02 = 0;
+  b_K0Scand_sumLxy = b_K0Scand_sumLxy01 = b_K0Scand_sumLxy02 = 0;
+  b_K0Scand_sumPt = b_K0Scand_sumPt01 = b_K0Scand_sumPt02 = 0;
+  
+  dSumErrL3D = 0;
+  
+  for ( UInt_t i = 0 ; i < nhad ; i++ ) {
+    //if ( had_l3D[ i ] < dCutLine ) continue;
+    
+    if ( abs(had_pdgId[ i ]) == 310 ) {
+      if ( had_l3D[ i ] > 0.3 && had_lxy[ i ] > 0.2 ) {
+        b_nK0Scand02++;
+        b_K0Scand_sumLxy02 += had_lxy[ i ];
+        b_K0Scand_sumPt02 += had_pt[ i ];
+      }
+      
+      if ( had_l3D[ i ] > 0.2 && had_lxy[ i ] > 0.1 ) {
+        b_nK0Scand01++;
+        b_K0Scand_sumLxy01 += had_lxy[ i ];
+        b_K0Scand_sumPt01 += had_pt[ i ];
+      }
+      
+      b_nK0Scand++;
+      b_K0Scand_sumLxy += had_lxy[ i ];
+      b_K0Scand_sumPt += had_pt[ i ];
+    }
+    
+    if ( abs(had_pdgId[ i ]) != 443 && // J/psi
+         abs(had_pdgId[ i ]) != 421 && // D0
+         abs(had_pdgId[ i ]) != 413 )  // D*
+      continue;
+    
+    b_hadcand_sumLxy += had_lxy[ i ];
+    b_hadcand_sumL3D += had_l3D[ i ];
+    
+    b_hadcand_sumPt += had_pt[ i ];
+    b_hadcand_sumPtLxy += had_pt[ i ] * had_lxy[ i ];
+    b_hadcand_sumPtL3D += had_pt[ i ] * had_l3D[ i ];
+    
+    dSumErrL3D += had_l3DErr[ i ] * had_l3DErr[ i ];
+    
+    b_nhadcand++;
+  }
+  
+  if ( b_nhadcand > 0 ) {
+    dAvgL3D = b_hadcand_sumL3D / b_nhadcand;
+    dErrAvgL3D = sqrt(dSumErrL3D / b_nhadcand);
+  } else {
+    dAvgL3D = dCutLine;
+    dErrAvgL3D = dCutLine / 5.0;
+  }
+  
+  for ( UInt_t i = 0 ; i < nElectron ; i++ ) {
+    if ( !( dAvgL3D - dErrAvgL3D < Electron_ip3d[ i ] && 
+                                   Electron_ip3d[ i ] < dAvgL3D + dErrAvgL3D ) ) continue;
+    
+    b_hadcand_sumLxy += Electron_dxy[ i ];
+    b_hadcand_sumL3D += Electron_ip3d[ i ];
+    
+    b_hadcand_sumPt += Electron_pt[ i ];
+    b_hadcand_sumPtLxy += Electron_pt[ i ] * Electron_dxy[ i ];
+    b_hadcand_sumPtL3D += Electron_pt[ i ] * Electron_ip3d[ i ];
+    
+    b_nhadcand++;
+  }
+  
+  for ( UInt_t i = 0 ; i < nMuon ; i++ ) {
+    if ( !( dAvgL3D - dErrAvgL3D < Muon_ip3d[ i ] && 
+                                   Muon_ip3d[ i ] < dAvgL3D + dErrAvgL3D ) ) continue;
+    
+    b_hadcand_sumLxy += Muon_dxy[ i ];
+    b_hadcand_sumL3D += Muon_ip3d[ i ];
+    
+    b_hadcand_sumPt += Muon_pt[ i ];
+    b_hadcand_sumPtLxy += Muon_pt[ i ] * Muon_dxy[ i ];
+    b_hadcand_sumPtL3D += Muon_pt[ i ] * Muon_ip3d[ i ];
+    
+    b_nhadcand++;
+  }
+  
+  return 0;
+}
+
+
 int singletopAnalyser::CalcRecoCosStar() {
   TLorentzVector vec4LepRest = b_lep, vec4JetRest = b_jet1;
   
@@ -1207,7 +1407,9 @@ int singletopAnalyser::RunEvt() {
   b_nfatjet = nFatJet;
   b_nsubjet = nSubJet;
   
-  b_nhadcand = nhad;
+  //b_nhadcand = nhad;
+  
+  GetJetAndHadronCandInfo();
   
   /*if ( m_isMC && !m_isSig && m_nBkgType == MY_FLAG_BKGTYPE_TTBAR ) {
     if ( b_lep_pid != b_ttbar_lep1_pdgId || b_lep.DeltaR(b_ttbar_lep1) > b_lep.DeltaR(b_ttbar_lep2) ) {
@@ -1221,23 +1423,74 @@ int singletopAnalyser::RunEvt() {
     }
   }*/
   if ( m_isMC && !m_isSig && m_nBkgType == MY_FLAG_BKGTYPE_TTBAR ) {
+    //printf("Gen idx which matches the lepton: %i\n", m_nIdxLepGenMatch);
+    
     if ( b_ttbar_channel > 1 ) {
+      Int_t nIdx = -1;
+      Double_t dMinDR = 1048576.0;
+      Int_t nIdxGenLep;
+      
       if ( abs(b_lep_pid) == 13 ) {
-        Int_t nIdx = -1;
         for ( Int_t i = 0 ; i < (int)nMuon ; i++ ) {
           TLorentzVector mom;
           mom.SetPtEtaPhiM(Muon_pt[ i ], Muon_eta[ i ], Muon_phi[ i ], Muon_mass[ i ]);
-          if ( mom.DeltaR(b_lep) < 0.001 ) {
+          Double_t dDR = mom.DeltaR(b_lep);
+          
+          if ( dMinDR > dDR ) {
+            dMinDR = dDR;
             nIdx = i;
-            break;
           }
         }
         
-        b_ttbar_lep1_deltaRGen = ( !( ( abs(b_ttbar_lep1_pdgId) == 13 && nIdx == m_nIdxGenLep ) || 
-          ( abs(b_ttbar_lep2_pdgId) == 13 && nIdx == m_nIdxGenLep2nd ) ) ? 1 : -1 );
+        nIdxGenLep = SeekFirstGenPart(Muon_genPartIdx[ nIdx ]);
       } else {
+        for ( Int_t i = 0 ; i < (int)nElectron ; i++ ) {
+          TLorentzVector mom;
+          mom.SetPtEtaPhiM(Electron_pt[ i ], Electron_eta[ i ], Electron_phi[ i ], Electron_mass[ i ]);
+          Double_t dDR = mom.DeltaR(b_lep);
+          
+          if ( dMinDR > dDR ) {
+            dMinDR = dDR;
+            nIdx = i;
+          }
+        }
         
+        nIdxGenLep = SeekFirstGenPart(Electron_genPartIdx[ nIdx ]);
       }
+      
+      if ( nIdxGenLep != m_nIdxGenLep && nIdxGenLep != m_nIdxGenLep2nd && abs(GenPart_pdgId[ GenPart_genPartIdxMother[ nIdxGenLep ] ]) != 15 ) {
+        /*printf("================ GEN PARTICLES %10i ==========\n", (int)m_nEventIdx);
+        printf("Top idx : %i, %i\n", m_nIdxGenTop, m_nIdxGenTop2nd);
+        printf("W idx : %i, %i\n", m_nIdxGenW, m_nIdxGenW2nd);
+        printf("Gen idx which matches the lepton: %i (%i)\n", nIdxGenLep, Muon_genPartIdx[ nIdx ]);
+        if ( b_ttbar_channel >= 2 ) printf("1st lepton idx : %i\n", m_nIdxGenLep);
+        if ( b_ttbar_channel >= 3 ) printf("2nd lepton idx : %i\n", m_nIdxGenLep2nd);
+        
+        for ( Int_t i = 0 ; i < (int)nGenPart ; i++ ) {
+          TLorentzVector vec4P4;
+          vec4P4.SetPtEtaPhiM(GenPart_pt[ i ], GenPart_eta[ i ], GenPart_phi[ i ], GenPart_mass[ i ]);
+          printf("%5i - %7i | %5i %4X %4X (%i %i) | %8.3f %8.3f %8.3f | %8.3f %8.3f %8.3f %8.3f\n", 
+            i, GenPart_pdgId[ i ], 
+            GenPart_genPartIdxMother[ i ], GenPart_status[ i ], GenPart_statusFlags[ i ], 
+            ( GenPart_statusFlags[ i ] >> 12 ) & 0x3, ( GenPart_statusFlags[ i ] >> 7 ) & 0x3,
+            GenPart_pt[ i ], GenPart_eta[ i ], GenPart_phi[ i ], 
+            vec4P4.X(), vec4P4.Y(), vec4P4.Z(), GenPart_mass[ i ]);
+        }*/
+        
+      } else {
+        if ( nIdxGenLep == m_nIdxGenLep2nd ) {
+          TLorentzVector vec4Swap;
+          Int_t nSwap;
+          
+          vec4Swap = b_gentop1; b_gentop1 = b_ttbar_gentop2; b_ttbar_gentop2 = vec4Swap;
+          vec4Swap = b_ttbar_genB1; b_ttbar_genB1 = b_ttbar_genB2; b_ttbar_genB2 = vec4Swap;
+          vec4Swap = b_ttbar_genLep1; b_ttbar_genLep1 = b_ttbar_genLep2; b_ttbar_genLep2 = vec4Swap;
+          nSwap = b_ttbar_lep1_pdgId; b_ttbar_lep1_pdgId = b_ttbar_lep2_pdgId; b_ttbar_lep2_pdgId = nSwap;
+        }
+      }
+      
+      b_ttbar_lep1_deltaRGen = ( !( ( abs(b_ttbar_lep1_pdgId) == 13 && nIdx == m_nIdxGenLep ) || 
+        ( abs(b_ttbar_lep2_pdgId) == 13 && nIdx == m_nIdxGenLep2nd ) ) ? 1 : -1 );
       
       if ( m_nIdxGenLep ) {
       }
@@ -1249,6 +1502,15 @@ int singletopAnalyser::RunEvt() {
   RecoTop();
   if ( ( b_njet == 2 && b_nbjet == 1 ) || ( b_njet == 3 && b_nbjet == 2 ) )
     CalcRecoCosStar();
+  
+  GetTMVATable();
+  
+  return 0;
+}
+
+
+int singletopAnalyser::GetTMVATable() {
+  
   
   return 0;
 }

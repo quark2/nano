@@ -30,7 +30,7 @@ if len(sys.argv) < 2 or sys.argv[ 1 ] == "--help":
   sys.exit(0)
 
 strJobNum = sys.argv[ 1 ]
-strJobName = "nanoAOD_to_ntuple"
+strJobName = "nanoAOD_to_ntuple_%s"%strJobNum
 
 #strNumJob = "500" if len(sys.argv) < 3 else sys.argv[ 2 ]
 strNumJob  = "250"
@@ -53,6 +53,7 @@ if not os.path.isdir(strJobName):
 strSubmitCard = strSubmitCardTemplate%{"dest": strJobNum, "jobname": strJobName, 
   "jobnum": strNumJob, "numPerJob": strNumRoot}
 os.system("./full_archive.sh singletop_nanoAOD ; echo '@@ Archiving is complete'")
+os.system("cp job.tar.gz archive_job_codes/job_%s.tar.gz"%strJobNum)
 os.system("printf '%(card)s' | condor_submit"%{"card": strSubmitCard})
 
 

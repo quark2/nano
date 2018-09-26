@@ -36,6 +36,8 @@ void topEventSelectionSL::Reset()
   b_trig_m_trk = b_trig_m_global = 0;
   b_trig_m = b_trig_e = 0;
   
+  b_maxBDiscr_nonb = -9;
+  
   m_jets.clear();
   m_jetsCMVA.clear();
 
@@ -84,7 +86,7 @@ int topEventSelectionSL::EventSelection()
   //b_trig_e = HLT_Ele27_WPTight_Gsf;
   b_trig_e = HLT_Ele32_eta2p1_WPTight_Gsf ? 1 : 0;
   
-  //if ( !( b_trig_m > 0 || b_trig_e > 0 ) ) return b_step;
+  if ( !( b_trig_m > 0 || b_trig_e > 0 ) ) return b_step;
 
   // TODO Check trigger requirements (TTbarXSecSynchronization page doesn't have yet)
   

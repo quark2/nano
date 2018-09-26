@@ -14,6 +14,8 @@ protected:
 
   bool isDilep, isSemiLep;
   
+  Float_t b_maxBDiscr_nonb;
+  
 public:
   std::vector<TParticle> muonSelection();
   std::vector<TParticle> elecSelection();

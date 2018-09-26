@@ -268,7 +268,8 @@ strOutFile = "hist_%s_%s.png"%(strDirHist, strVarName)
 print strOutFile, 
 
 canvMain = drawTH1("asdf", CMS_lumi, listMC, histRD, x_name, y_name, # dolog, 
-  doLogX = binning[ 0 ] < 0 and binning[ 1 ] == "log1D", histSig = histMCSig)
+  doLogX = binning[ 0 ] < 0 and binning[ 1 ] == "log1D", 
+  histSig = histMCSig if histMCSig.Integral() > 0 else None)
 
 canvMain.SaveAs(strOutFile)
 

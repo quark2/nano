@@ -136,13 +136,16 @@
     "abs(top1.Eta())": {"bin": [20, 0, 3.0], "xaxis": "|#eta| of reco. top quark (GeV)", "yaxis": "Events"}, 
     "top1.Phi()":      {"bin": [20, 0, 3.5], "xaxis": "Phi of reco. top quark (GeV)", "yaxis": "Events"}, 
     
-    "W1.Mt()":        {"bin": [25, 0, 200], "xaxis": "Mass of reco. top quark (GeV)", "yaxis": "Events"}, 
+    "W1.Mt()":        {"bin": [25, 0, 200], "xaxis": "Transverse mass of reco. W (GeV)", "yaxis": "Events"}, 
     
     "isolep": {"bin": [-1, "log1D", 30, 0.001, 10], "xaxis": "lepton isolation", "yaxis": "Events"}, 
     
     "CSVv2_jet1":  {"bin": [40, 0, 1], "xaxis": "CSVv2 value of the 1st non-b-tagged jet", "yaxis": "Events"}, 
     "CSVv2_bjet1": {"bin": [40, 0, 1], "xaxis": "CSVv2 value of the 1st b-tagged jet", "yaxis": "Events"}, 
-    "CSVv2_bjet2": {"bin": [40, 0, 1], "xaxis": "CSVv2 value of the 2nd b-tagged jet", "yaxis": "Events"}
+    "CSVv2_bjet2": {"bin": [40, 0, 1], "xaxis": "CSVv2 value of the 2nd b-tagged jet", "yaxis": "Events"}, 
+    
+    "nevents": "histo", 
+    "cutFlow": "histo"
   }
   
   

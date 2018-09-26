@@ -23,9 +23,13 @@ if os.system(strSpellNoDup) != 0:
   print "You are already running this code."
   sys.exit(0)
 
+strSrcPath = "/xrootd/store/user/quark2930/singletop/%s/"%sys.argv[ 1 ]
+strPathListSet = os.path.join(strPathDraw, "listSet.json")
+
 strNameTree = "event"
 channel = 2 # 0 : all, 1 : el, 2 : mu, 3 : el + mu, (-) : anti
 bAllcharge = False
+bNoChargeCut = False
 strWeighthead = "gpmb"
 nStep = 4
 
@@ -45,7 +49,7 @@ bDefaultListSet = True
 strHelpHowto = "Usage : ./[name of this py file] [dir name of roots] " + \
   "-a <channel> -c <cut> -w <weight> -n <local running> -l <listSet JSON file>"
 try:
-  opts, args = getopt.getopt(sys.argv[ 2: ], "hnea:c:w:s:l:", 
+  opts, args = getopt.getopt(sys.argv[ 2: ], "hneAa:c:w:s:l:", 
     ["channel", "cut", "allcharge", "weight", "step", "listset"])
 except getopt.GetoptError:          
   sys.stderr.write(strHelpHowto + "\n")
@@ -57,6 +61,8 @@ for opt, arg in opts:
     sys.exit()
   elif opt in ("-a", "--channel"):
     channel = int(arg)
+  elif opt in ("-A"):
+    bNoChargeCut = True
   elif opt in ("-c", "--cut"):
     strCutAdd = arg
   elif opt in ("-e", "--allcharge"): 
@@ -78,10 +84,10 @@ if channel != 0:
   strSign = "" if channel > 0 else "-"
   if abs(channel) == 1: 
     cut += " && trig_e > 0"
-    cut += " && lep_pid == %s11"%strSign if not bAllcharge else " && abs(lep_pid) == 11"
+    if not bNoChargeCut: cut += " && lep_pid == %s11"%strSign if not bAllcharge else " && abs(lep_pid) == 11"
   if abs(channel) == 2: 
     cut += " && trig_m > 0"
-    #cut += " && lep_pid == %s13"%strSign if not bAllcharge else " && abs(lep_pid) == 13"
+    if not bNoChargeCut: cut += " && lep_pid == %s13"%strSign if not bAllcharge else " && abs(lep_pid) == 13"
   if abs(channel) == 3: 
     cut += " && ( lep_pid == %s11 || lep_pid == %s13)"%(strSign, strSign)
 
@@ -94,10 +100,6 @@ weight = weight[ 3: ] if weight != "" else "1.0"
 
 cut += " && ( " + strCutAdd + " )" if len(strCutAdd) > 0 else ""
 cut = cut[ 4: ]
-
-strSrcPath = "/xrootd/store/user/quark2930/singletop/%s/"%sys.argv[ 1 ]
-
-strPathListSet = os.path.join(strPathDraw, "listSet.json")
 
 #if not os.path.exists(strSrcPath): 
 #  sys.stderr.write("Error: cannot find the directory of nano ntuples\n")

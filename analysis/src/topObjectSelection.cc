@@ -17,7 +17,7 @@ vector<TParticle> topObjectSelection::elecSelection() {
     if (Electron_cutBased[i] < 4) continue; 
     float el_scEta = Electron_deltaEtaSC[i] + Electron_eta[i];
     if ( std::abs(el_scEta) > 1.4442 &&  std::abs(el_scEta) < 1.566 ) continue;
-    if ( std::abs(el_scEta) >= 1.566 ) continue; // For AN-2017/083; it must be turned off when QCD-studying
+    //if ( std::abs(el_scEta) >= 1.566 ) continue; // For AN-2017/083; it must be turned off when QCD-studying
     if ( Electron_pfRelIso03_all[ i ] > 0.0588 ) continue;
     TLorentzVector mom;
     mom.SetPtEtaPhiM(Electron_pt[i], Electron_eta[i], Electron_phi[i], Electron_mass[i]);
@@ -154,11 +154,17 @@ vector<TParticle> topObjectSelection::bjetSelection() {
     if (Jet_pt[i] < 40) continue;
     if (Jet_jetId[i] < 1) continue;
     //if (Jet_btagCSVV2[i] < 0.8484) continue;
-    //if (Jet_btagCSVV2[i] < 0.9535) continue;
+    if (Jet_btagCSVV2[i] < 0.9535) {
+      if ( b_maxBDiscr_nonb < Jet_btagCSVV2[ i ] ) {
+        b_maxBDiscr_nonb = Jet_btagCSVV2[ i ];
+      }
+      
+      continue;
+    }
     // For AN-2017/083
     // See p. 6, AN-2017/056, or 
     // https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation80XReReco#Boosted_event_topologies
-    if (Jet_btagCSVV2[i] < 0.9535) continue;
+    //if (Jet_btagCMVA[i] < 0.9432) {continue;}
     TLorentzVector mom;
     mom.SetPtEtaPhiM(Jet_pt[i], Jet_eta[i], Jet_phi[i], Jet_mass[i]);
     bool hasOverLap = false;
