@@ -251,7 +251,7 @@ void testForJECAnalyser::Loop() {
 int main(int argc, char *argv[]) {
   // ORG: /xrootd/store/group/nanoAOD/run2_2016v5/ST_t-channel_antitop_4f_inclusiveDecays_13TeV-powhegV2-madspin-pythia8_TuneCUETP8M1/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/180610_143635/0000/nanoAOD_197.root
   //std::string strSrc = "org_Skim.root";
-  std::string strSrc = "/cms/ldap_home/quark2930/Work/top/singletop/nanoAOD_949_Oct18_01/src/nano/nanoAOD/prod/nanoAOD.root";
+  std::string strSrc = "nanoAOD.root";
   std::string strDst = "res.root";
   
   auto inFile = TFile::Open(strSrc.c_str());
