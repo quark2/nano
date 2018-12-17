@@ -13,7 +13,6 @@ def customiseMuons(process):
     return(process)
     
 def customise(process, doHadron=True, fastSim=False):
-    #fileName = cms.untracked.string('nanoAOD.root')
     fileName = cms.untracked.string('nanoAOD.root')
     if hasattr(process, 'NANOAODSIMoutput'):
         # MC
