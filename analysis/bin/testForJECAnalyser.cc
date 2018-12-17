@@ -180,7 +180,12 @@ bool testForJECAnalyser::additionalConditionForJet(UInt_t nIdx, Float_t &fJetPt,
   b_jetPt_Unc_an.push_back(fJetPt);
   
   //nIdxGen = Jet_genJetIdx[ nIdx ];
-  nIdxGen = GetMatchGenJet(nIdx);
+  JME::JetParameters jetPars = {{JME::Binning::JetPt, Jet_pt[ nIdx ]},
+                                {JME::Binning::JetEta, Jet_eta[ nIdx ]},
+                                {JME::Binning::Rho, fixedGridRhoFastjetAll}};
+  const double jetRes = jetResObj.getResolution(jetPars); // Note: this is relative resolution.
+  
+  nIdxGen = GetMatchGenJet(nIdx, jetRes);
   b_GenMatched.push_back(( nIdxGen >= 0 ? 1 : 0 ));
   
   if ( nIdxGen >= 0 && abs(( fJetPt - fJetPtUncPP ) / fJetPtUncPP) > 0.000001 ) {
