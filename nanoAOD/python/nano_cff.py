@@ -13,6 +13,7 @@ def customiseMuons(process):
     return(process)
     
 def customise(process, doHadron=True, fastSim=False):
+    #fileName = cms.untracked.string('nanoAOD.root')
     fileName = cms.untracked.string('nanoAOD.root')
     if hasattr(process, 'NANOAODSIMoutput'):
         # MC
@@ -46,7 +47,11 @@ def customise(process, doHadron=True, fastSim=False):
         
         from Configuration.Eras.Modifier_run2_miniAOD_80XLegacy_cff import run2_miniAOD_80XLegacy
         run2_miniAOD_80XLegacy.toReplaceWith(process.nanoAOD_step, process.nanoAOD_step.copyAndExclude([process.v0GenParticles,process.v0Tables]))
-
+    
+    # ADDITION for comparison with JEC in CMSSW
+    process.load('nano.nanoAOD.JetPreJECSmeared_cff')
+    process.nanoAOD_step += process.jetPreJECSmearTables
+    
     if fastSim:
         process.nanoAOD_step.remove(process.triggerObjectTable)
         process.nanoAOD_step.remove(process.l1bits)

@@ -23,12 +23,14 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1)
+    #input = cms.untracked.int32(500)
 )
 
 # Input source
 process.source = cms.Source("PoolSource",
 #    fileNames = cms.untracked.vstring('file:10D3267C-6FBD-E611-AED8-70106F48BC1E.root'),
-    fileNames = cms.untracked.vstring('/store/user/jlee/tsW_13TeV_PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v4_miniAOD/miniAOD_226.root'),
+    #fileNames = cms.untracked.vstring('/store/user/jlee/tsW_13TeV_PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v4_miniAOD/miniAOD_226.root'),
+    fileNames = cms.untracked.vstring('file:/cms/ldap_home/quark2930/Work/top/singletop/test_cattools_9_4_9/src/JetMETCorrections/JMEReferenceTable/test/jme_reference_sample_mc_80x.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
