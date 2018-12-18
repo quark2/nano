@@ -50,6 +50,7 @@ def customise(process, doHadron=True, fastSim=False):
     # ADDITION for comparison with JEC in CMSSW
     process.load('nano.nanoAOD.JetPreJECSmeared_cff')
     process.nanoAOD_step += process.jetPreJECSmearTables
+    process.jetTable.variables.pt.precision=20
     
     if fastSim:
         process.nanoAOD_step.remove(process.triggerObjectTable)

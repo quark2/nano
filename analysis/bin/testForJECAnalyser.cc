@@ -2,6 +2,8 @@
 #include <vector>
 #include <TLorentzVector.h>
 
+#include "DataFormats/Math/interface/deltaR.h"
+
 #include "nano/analysis/interface/topEventSelectionSL.h"
 #include "nano/analysis/interface/hadAnalyser.h"
 #include "nano/analysis/interface/HadTruthEvents.h"
@@ -17,7 +19,11 @@ class testForJECAnalyser : public topEventSelectionSL {
 private:
   
 public:
+  Int_t nJetPreSmeared;
   Float_t Jet_pt_jer_nom[35];
+  Float_t Jet_eta_jer_nom[35];
+  Float_t Jet_phi_jer_nom[35];
+  Float_t Jet_mass_jer_nom[35];
   
   Float_t Jet_mass_jer_up[35];
   Float_t Jet_mass_jer_dn[35];
@@ -29,7 +35,11 @@ public:
   Float_t Jet_pt_jes_up[35];
   Float_t Jet_pt_jes_dn[35];
   
+  TBranch *b_nJetPreSmeared;
   TBranch *b_Jet_pt_jer_nom;
+  TBranch *b_Jet_eta_jer_nom;
+  TBranch *b_Jet_phi_jer_nom;
+  TBranch *b_Jet_mass_jer_nom;
   
   TBranch *b_Jet_mass_jer_up;
   TBranch *b_Jet_mass_jer_dn;
@@ -56,7 +66,11 @@ public:
     topEventSelectionSL(tree, had, hadTruth, isMC, sle, slm, unFlag)
   {
     //fChain->SetBranchAddress("Jet_pt_nom", Jet_pt_jer_nom, &b_Jet_pt_jer_nom);
-    fChain->SetBranchAddress("JetPreSmeared_pt", Jet_pt_jer_nom, &b_Jet_pt_jer_nom);
+    fChain->SetBranchAddress("nJetPreSmeared",     &nJetPreSmeared,   &b_nJetPreSmeared);
+    fChain->SetBranchAddress("JetPreSmeared_pt",   Jet_pt_jer_nom,   &b_Jet_pt_jer_nom);
+    fChain->SetBranchAddress("JetPreSmeared_eta",  Jet_eta_jer_nom,  &b_Jet_eta_jer_nom);
+    fChain->SetBranchAddress("JetPreSmeared_phi",  Jet_phi_jer_nom,  &b_Jet_phi_jer_nom);
+    fChain->SetBranchAddress("JetPreSmeared_mass", Jet_mass_jer_nom, &b_Jet_mass_jer_nom);
     
     fChain->SetBranchAddress("Jet_mass_jerUp", Jet_mass_jer_up, &b_Jet_mass_jer_up);
     fChain->SetBranchAddress("Jet_mass_jerDown", Jet_mass_jer_dn, &b_Jet_mass_jer_dn);
@@ -104,10 +118,9 @@ public:
     cut_GenJetEta = 2.4;
     cut_GenJetConeSizeOverlap = 0.4;
     
-    cut_JetID = 1;
-    cut_JetPt = 40;
-    cut_JetEta = 4.7;
-    cut_JetConeSizeOverlap = 0.4;
+    cut_JetID = -1;
+    cut_JetPt = 0;
+    cut_JetEta = 104857600;
     cut_JetConeSizeOverlap = 0.0;
     
     cut_BJetID = 1;
@@ -154,7 +167,27 @@ bool testForJECAnalyser::additionalConditionForJet(UInt_t nIdx, Float_t &fJetPt,
   b_jetEta.push_back(fJetEta);
   b_jetPhi.push_back(fJetPhi);
   
-  b_jetPtNom.push_back(Jet_pt_jer_nom[ nIdx ]);
+  // Seeking the matching smeared jet in PAT
+  // Because it is sorted by pT after smearing, 
+  // we don't know what is smeared one by scaling method and what is by stochastic method directly.
+  // This deltaR method is the only way...
+  Float_t fDRMin = 10485760;
+  Int_t nIdxMatchedPre = -1;
+  
+  for ( Int_t i = 0 ; i < (Int_t)nJetPreSmeared ; i++ ) {
+    Float_t fDR = deltaR(fJetEta, fJetPhi, Jet_eta_jer_nom[ i ], Jet_phi_jer_nom[ i ]);
+    
+    if ( fDRMin > fDR ) {
+      fDRMin = fDR;
+      nIdxMatchedPre = i;
+    }
+  }
+  
+  if ( nIdxMatchedPre < 0 ) {
+    printf("Something is wrong on this jet...! - %i in %i-th event\n", nIdx, (int)m_nIdxEntry);
+  }
+  
+  b_jetPtNom.push_back(Jet_pt_jer_nom[ nIdxMatchedPre ]);
   
   if ( ( m_unFlag & OptFlag_JER_Up ) != 0 ) {
     fJetMassUncPP = Jet_mass_jer_up[ nIdx ];
@@ -169,9 +202,10 @@ bool testForJECAnalyser::additionalConditionForJet(UInt_t nIdx, Float_t &fJetPt,
     fJetMassUncPP = Jet_mass_jes_dn[ nIdx ];
     fJetPtUncPP = Jet_pt_jes_dn[ nIdx ];
   } else {
-    fJetMassUncPP = Jet_mass[ nIdx ];
+    //fJetMassUncPP = Jet_mass[ nIdx ];
     //fJetPtUncPP = Jet_pt[ nIdx ];
-    fJetPtUncPP = Jet_pt_jer_nom[ nIdx ];
+    fJetMassUncPP = Jet_mass_jer_nom[ nIdxMatchedPre ];
+    fJetPtUncPP = Jet_pt_jer_nom[ nIdxMatchedPre ];
   }
   
   b_jetM_Unc_pp.push_back(fJetMassUncPP);
@@ -185,13 +219,8 @@ bool testForJECAnalyser::additionalConditionForJet(UInt_t nIdx, Float_t &fJetPt,
                                 {JME::Binning::Rho, fixedGridRhoFastjetAll}};
   const double jetRes = jetResObj.getResolution(jetPars); // Note: this is relative resolution.
   
-  nIdxGen = GetMatchGenJet(nIdx, jetRes);
+  nIdxGen = GetMatchGenJet(nIdx, jetRes * Jet_pt[ nIdx ]);
   b_GenMatched.push_back(( nIdxGen >= 0 ? 1 : 0 ));
-  
-  if ( nIdxGen >= 0 && abs(( fJetPt - fJetPtUncPP ) / fJetPtUncPP) > 0.000001 ) {
-    //printf("%lf - %lf; ", ( fJetPt - fJetPtUncPP ) / fJetPtUncPP, ( fJetMass - fJetMassUncPP ) / fJetMassUncPP);
-    printf("%i, %i, %lf, %lf, %lf, %lf\n", (int)m_nIdxEntry, (int)nIdx, Jet_pt[ nIdx ], fJetPt, fJetPtUncPP, ( fJetPt - fJetPtUncPP ) / fJetPtUncPP);
-  }
   
   return true;
 }
