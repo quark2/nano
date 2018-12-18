@@ -2,8 +2,6 @@
 #include <vector>
 #include <TLorentzVector.h>
 
-#include "DataFormats/Math/interface/deltaR.h"
-
 #include "nano/analysis/interface/topEventSelectionSL.h"
 #include "nano/analysis/interface/hadAnalyser.h"
 #include "nano/analysis/interface/HadTruthEvents.h"
@@ -138,11 +136,15 @@ bool testForJECAnalyser::additionalConditionForJet(UInt_t nIdx, Float_t &fJetPt,
   // Because it is sorted by pT after smearing, 
   // we don't know what is smeared one by scaling method and what is by stochastic method directly.
   // This deltaR method is the only way...
-  Float_t fDRMin = 10485760;
+  double fDEta, fDPhi, fDR, fDRMin = 10485760;
   Int_t nIdxMatchedPre = -1;
   
   for ( Int_t i = 0 ; i < (Int_t)nJetPreSmeared ; i++ ) {
-    Float_t fDR = deltaR(fJetEta, fJetPhi, Jet_eta_jer_nom[ i ], Jet_phi_jer_nom[ i ]);
+    fDEta = fJetEta - Jet_eta_jer_nom[ i ];
+    fDPhi = std::abs(fJetPhi - Jet_phi_jer_nom[ i ]);
+    if ( fDPhi > (double)M_PI ) fDPhi -= (double)( 2 * M_PI );
+    
+    fDR = std::sqrt(fDEta * fDEta + fDPhi * fDPhi);
     
     if ( fDRMin > fDR ) {
       fDRMin = fDR;
