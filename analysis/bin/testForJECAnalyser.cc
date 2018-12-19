@@ -181,9 +181,9 @@ bool testForJECAnalyser::additionalConditionForJet(UInt_t nIdx, Float_t &fJetPt,
   b_jetPt_Unc_an.push_back(fJetPt);
   
   // Checking whether it has matched gen jet (so that scaling method is applied) or not
-  JME::JetParameters jetPars = {{JME::Binning::JetPt, Jet_pt[ nIdx ]},
-                                {JME::Binning::JetEta, Jet_eta[ nIdx ]},
-                                {JME::Binning::Rho, fixedGridRhoFastjetAll}};
+  JMENano::JetParameters jetPars = {{JMENano::Binning::JetPt, Jet_pt[ nIdx ]},
+                                    {JMENano::Binning::JetEta, Jet_eta[ nIdx ]},
+                                    {JMENano::Binning::Rho, fixedGridRhoFastjetAll}};
   const double jetRes = jetResObj.getResolution(jetPars); // Note: this is relative resolution.
   b_GenMatched.push_back(( GetMatchGenJet(nIdx, jetRes * Jet_pt[ nIdx ]) >= 0 ? 1 : 0 ));
   
