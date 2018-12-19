@@ -1,6 +1,6 @@
 // 
 // This code is from copying 
-//   https://github.com/cms-sw/cmssw/blob/CMSSW_9_4_X/CondFormats/JetMETObjects/interface/JetResolutionObject.h
+//   https://github.com/cms-sw/cmssw/blob/CMSSW_9_4_X/CondFormats/JetMETObjects/src/JetResolutionObject.cc
 //   in a2f9cbb commit
 // Copied by Byeonghak Ko
 //
@@ -38,7 +38,7 @@ namespace edm {
 #include <iomanip>
 #include <algorithm>
 
-namespace JME {
+namespace JMENano {
 
     std::string getDefinitionLine(const std::string& line) {
         size_t first = line.find ('{');
@@ -137,7 +137,7 @@ namespace JME {
             if (it == m_values.cend()) {
                 throwException(edm::errors::NotFound, "JER parametrisation depends on '" + 
                         JetParameters::binning_to_string.left.at(bin) +
-                        "' but no value for this parameter has been specified. Please call the appropriate 'set' function of the JME::JetParameters object");
+                        "' but no value for this parameter has been specified. Please call the appropriate 'set' function of the JMENano::JetParameters object");
             }
 
             values.push_back(it->second);
