@@ -17,23 +17,23 @@ class testForJECAnalyser : public topEventSelectionSL {
 private:
   
 public:
-  Float_t Jet_pt_jec[50];
+  Float_t Jet_pt_jec[70];
   
   Int_t nJetPreSmeared;
-  Float_t Jet_pt_jer_nom[50];
-  Float_t Jet_eta_jer_nom[50];
-  Float_t Jet_phi_jer_nom[50];
-  Float_t Jet_mass_jer_nom[50];
+  Float_t Jet_pt_jer_nom[70];
+  Float_t Jet_eta_jer_nom[70];
+  Float_t Jet_phi_jer_nom[70];
+  Float_t Jet_mass_jer_nom[70];
   
-  Float_t Jet_mass_jer_up[50];
-  Float_t Jet_mass_jer_dn[50];
-  Float_t Jet_mass_jes_up[50];
-  Float_t Jet_mass_jes_dn[50];
+  Float_t Jet_mass_jer_up[70];
+  Float_t Jet_mass_jer_dn[70];
+  Float_t Jet_mass_jes_up[70];
+  Float_t Jet_mass_jes_dn[70];
   
-  Float_t Jet_pt_jer_up[50];
-  Float_t Jet_pt_jer_dn[50];
-  Float_t Jet_pt_jes_up[50];
-  Float_t Jet_pt_jes_dn[50];
+  Float_t Jet_pt_jer_up[70];
+  Float_t Jet_pt_jer_dn[70];
+  Float_t Jet_pt_jes_up[70];
+  Float_t Jet_pt_jes_dn[70];
   
   TBranch *b_Jet_pt_jec_nom;
   
