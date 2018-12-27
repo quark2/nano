@@ -81,16 +81,16 @@ def setMargins(canvas, doRatio = False):
     canvas.SetTicky(1)
     return canvas
 
-def setDefAxis(axis, title, offset):
+def setDefAxis(axis, title, offset, titlefont = 42, titlesize = 0.043, labelfont = 42, labelsize = 0.03):
     axis.SetTitle(title)
     axis.SetTitleOffset(offset)
     axis.SetTitleColor(1)
-    axis.SetTitleFont(42)
-    axis.SetTitleSize(0.043)
+    axis.SetTitleFont(titlefont)
+    axis.SetTitleSize(titlesize)
     axis.SetLabelColor(1)
-    axis.SetLabelFont(42)
+    axis.SetLabelFont(labelfont)
     axis.SetLabelOffset(0.007)
-    axis.SetLabelSize(0.03)
+    axis.SetLabelSize(labelsize)
     axis.SetAxisColor(1)
     axis.SetTickLength(0.03)
     axis.SetNdivisions(510)
@@ -98,16 +98,16 @@ def setDefAxis(axis, title, offset):
     #axis.SetPadTickX(1)
     #axis.SetPadTickY(1)
 
-def setDefTH1Style(th1, x_name, y_name):
-    setDefAxis(th1.GetYaxis(),y_name, 1.2)
-    setDefAxis(th1.GetXaxis(),x_name, 1)
+def setDefTH1Style(th1, x_name, y_name, titlefont = 42, titlesize = 0.043, labelfont = 42, labelsize = 0.03):
+    setDefAxis(th1.GetYaxis(),y_name, 1.2, titlefont, titlesize, labelfont, labelsize)
+    setDefAxis(th1.GetXaxis(),x_name, 1, titlefont, titlesize, labelfont, labelsize)
     ROOT.gStyle.SetStripDecimals(True)
     ROOT.gStyle.SetPadTickX(1)
     ROOT.gStyle.SetPadTickY(1)
     ROOT.gStyle.cd()
     return th1
     
-def drawTH1(name, cmsLumi, mclist, data, x_name, y_name, doLog=False, doRatio=True, ratioRange=0.45, legx=0.68, legfontsize=0.030):
+def drawTH1(name, cmsLumi, mclist, data, x_name, y_name, doLog=False, doLogX=False, doRatio=True, ratioRange=0.45, legx=0.68, legfontsize=0.030, histSig=None):
     leg = ROOT.TLegend(legx,0.68,legx+0.2,0.91)
     leg.SetBorderSize(0)
     #leg.SetNColumns(2)
@@ -166,10 +166,22 @@ def drawTH1(name, cmsLumi, mclist, data, x_name, y_name, doLog=False, doRatio=Tr
     setMargins(pads[0], doRatio)
     if doLog:
         pads[0].SetLogy()
+    
+    if doLogX: 
+        pads[ 0 ].SetLogx()
+        pads[ 1 ].SetLogx()
 
     data.Draw()
     hs.Draw("same")
     data.Draw("esamex0")
+    
+    if histSig is not None: 
+      histSig.Scale(data.Integral() / histSig.Integral())
+      histSig.SetLineColor(2)
+      
+      histSig.Draw("same HIST")
+      leg.AddEntry(histSig, "signal (scaled)", "l")
+    
     leg.Draw("same")
     
     pads[0].Update()
@@ -358,3 +370,278 @@ def drawRatioPlot(name, cmsLumi, mclist, data, x_name, y_name, doLog=False, doRa
     canv.Modified()
     canv.Update()
     return copy.deepcopy(canv)
+
+
+class TH1drawer: 
+  def __init__(self): 
+    self.doLog = False
+    self.doLogX = False
+    self.doRatio = True
+    
+    self.ratioMax = 1.8
+    self.minPlot = None
+    
+    self.ratioRange = 0.45
+    
+    self.legx = 0.68
+    self.legy = 0.91
+    self.legwidth  = 0.20
+    self.legheight = 0.23
+    self.legfontsize = 0.030
+    self.legfont = 42
+    
+    self.xtitlefont = 42
+    self.xtitlesize = 0.043
+    self.ytitlefont = 42
+    self.ytitlesize = 0.043
+    
+    self.xlabelfont = 42
+    self.xlabelsize = 0.03
+    self.ylabelfont = 42
+    self.ylabelsize = 0.03
+    
+    self.ytitleoffset = 1.35
+    
+    self.cmsLumi = None
+    self.mclist = None
+    
+    self.data = None
+    self.histSig = None
+  
+  # You must call at least once the Set methods in the followings before drawing
+  
+  def GetCMSLumi(self): return self.cmsLumi
+  def SetCMSLumi(self, cmsLumi): self.cmsLumi = cmsLumi
+  
+  def GetMCPlot(self): return self.mclist
+  def SetMCPlot(self, mclist): self.mclist = mclist
+  
+  def GetXaxis(self): return self.x_name
+  def SetXaxis(self, x_name): self.x_name = x_name
+  
+  def GetYaxis(self): return self.y_name
+  def SetYaxis(self, y_name): self.y_name = y_name
+  
+  # For unnecessary variables
+  
+  def GetDataPlot(self): return self.data
+  def SetDataPlot(self, data): self.data = data
+  
+  def IsLog(self): return self.doLog
+  def DoLog(self): self.doLog = True
+  def UndoLog(self): self.doLog = False
+  
+  def IsLogX(self): return self.doLogX
+  def DoLogX(self): self.doLogX = True
+  def UndoLogX(self): self.doLogX = False
+  
+  def GetRatioMax(self): return self.ratioMax
+  def SetRatioMax(self, ratioMax): self.ratioMax = ratioMax
+  
+  def GetMinimum(self): return self.minPlot
+  def SetMinimum(self, minPlot): self.minPlot = minPlot
+  
+  def GetRatioRange(self): return self.ratioRange
+  def SetRatioRange(self, ratioRange): self.ratioRange = ratioRange
+  
+  def GetXTitleFontSize(self): return self.xtitlesize
+  def SetXTitleFontSize(self, xtitlesize): self.xtitlesize = xtitlesize
+  
+  def GetXTitleFont(self): return self.xtitlefont
+  def SetXTitleFont(self, xtitlefont): self.xtitlefont = xtitlefont
+  
+  def GetYTitleFontSize(self): return self.ytitlesize
+  def SetYTitleFontSize(self, ytitlesize): self.ytitlesize = ytitlesize
+  
+  def GetYTitleFont(self): return self.ytitlefont
+  def SetYTitleFont(self, ytitlefont): self.ytitlefont = ytitlefont
+  
+  def GetXLabelFontSize(self): return self.xlabelsize
+  def SetXLabelFontSize(self, xlabelsize): self.xlabelsize = xlabelsize
+  
+  def GetXLabelFont(self): return self.xlabelfont
+  def SetXLabelFont(self, xlabelfont): self.xlabelfont = xlabelfont
+  
+  def GetYLabelFontSize(self): return self.ylabelsize
+  def SetYLabelFontSize(self, ylabelsize): self.ylabelsize = ylabelsize
+  
+  def GetYLabelFont(self): return self.ylabelfont
+  def SetYLabelFont(self, ylabelfont): self.ylabelfont = ylabelfont
+  
+  def GetYTitleOffset(self): return self.ytitleoffset
+  def SetYTitleOffset(self, ytitleoffset): self.ytitleoffset = ytitleoffset
+  
+  def GetLegendX(self): return self.legx
+  def SetLegendX(self, legx): self.legx = legx
+  
+  def GetLegendY(self): return self.legy
+  def SetLegendY(self, legy): self.legy = legy
+  
+  def GetLegendW(self): return self.legwidth
+  def SetLegendW(self, legwidth): self.legwidth = legwidth
+  
+  def GetLegendH(self): return self.legheight
+  def SetLegendH(self, legheight): self.legheight = legheight
+  
+  def GetLegendFont(self): return self.legfont
+  def SetLegendFont(self, legfont): self.legfont = legfont
+  
+  def GetLegendFontSize(self): return self.legfontsize
+  def SetLegendFontSize(self, legfontsize): self.legfontsize = legfontsize
+  
+  
+  # Functions for drawing; you can rewrite them in your daughter class
+  
+  
+  def MakeLegend(self): 
+    self.leg = ROOT.TLegend(self.legx, self.legy - self.legheight, self.legx + self.legwidth, self.legy)
+    self.leg.SetBorderSize(0)
+    #leg.SetNColumns(2)
+    self.leg.SetTextSize(self.legfontsize)
+    self.leg.SetTextFont(self.legfont)
+    self.leg.SetLineColor(0)
+    self.leg.SetFillColor(0)
+    self.leg.SetFillStyle(0)
+    
+    if self.data is not None: self.leg.AddEntry(self.data, "Data", "lp")
+  
+  
+  def ArrangeMCPlots(self): 
+    self.hs = ROOT.THStack("mcstack", "mcstack")
+    self.hratio = self.mclist[ 0 ].Clone("hratio")
+    self.hratio.Reset()
+    
+    leghist = []
+    for i, mc in enumerate(self.mclist):
+      hnew = mc.Clone("hnew" + mc.GetName())
+      hnew.Sumw2(False)
+      
+      self.hs.Add(hnew)
+      self.hratio.Add(mc)
+      
+      inversed = self.mclist[ len(self.mclist) - 1 - i ]
+      
+      if not any(inversed.GetTitle() == s for s in leghist):
+        self.leg.AddEntry(inversed, inversed.GetTitle(), "f")
+        leghist.append(inversed.GetTitle())
+    
+    #self.hratio = self.hs.GetStack().Last()
+    if self.doRatio: self.hratio.Divide(self.data, self.hratio, 1, 1, "B")
+  
+  
+  def SetBaseHistogram(self): 
+    if self.data is not None: 
+      self.hBase = self.data
+      self.strNameBase = "data"
+      self.strDrawOption = ""
+    else: 
+      self.hBase = copy.deepcopy(self.hs.GetStack().Last())
+      self.strNameBase = "data"
+      self.strDrawOption = ""
+  
+  
+  def DrawMCPlots(self, option = ""): 
+    self.hs.Draw("same" + option)
+  
+  
+  def DoDraw(self, name): 
+    if self.cmsLumi is None: return None
+    if self.mclist is None: return None
+    
+    if self.data is None: 
+      self.doRatio = False
+    
+    self.MakeLegend()
+    self.ArrangeMCPlots()
+    
+    tdrstyle.setTDRStyle()
+    
+    if self.data is not None: self.data.SetName("data")
+    
+    self.SetBaseHistogram()
+    
+    setDefTH1Style(self.hBase, self.x_name, self.y_name, 
+      self.xtitlefont, self.xtitlesize, self.xlabelfont, self.xlabelsize)
+    self.hBase.SetName(self.strNameBase)
+    self.hBase.SetMaximum(self.hBase.GetMaximum() * self.ratioMax)
+    
+    if self.doLog:
+      data.SetMaximum(self.hBase.GetMaximum() * 100)
+      #data.SetMinimum(10 ** -3)
+    else:
+      self.hBase.GetYaxis().SetTitleSize(self.ytitlesize)
+      self.hBase.GetYaxis().SetLabelSize(self.ylabelsize)
+      self.hBase.GetYaxis().SetTitleOffset(self.ytitleoffset)
+        
+    ratio_fraction = 0
+    if self.doRatio:
+      ratio_fraction = 0.3
+      self.hBase.GetXaxis().SetLabelSize(0)
+      self.hBase.GetXaxis().SetTitleSize(0)
+      setDefTH1Style(self.hratio, self.x_name, "Data/MC", 
+        self.xtitlefont, self.xtitlesize, self.xlabelfont, self.xlabelsize)
+      self.hratio.GetYaxis().CenterTitle()
+      self.hratio.GetYaxis().SetNdivisions(5)
+            
+    canv = makeCanvas(name, self.doRatio)
+    pads=[canv]
+    pads = rootplotcore.divide_canvas(canv, ratio_fraction)
+    
+    pads[ 0 ].cd()
+    setMargins(pads[ 0 ], self.doRatio)
+    if self.doLog:
+      pads[ 0 ].SetLogy()
+    
+    if self.doLogX: 
+      pads[ 0 ].SetLogx()
+      pads[ 1 ].SetLogx()
+    
+    if self.minPlot is not None: self.hBase.SetMinimum(self.minPlot)
+    
+    self.hBase.Draw(self.strDrawOption)
+    self.DrawMCPlots()
+    if self.data is not None: self.data.Draw("esamex0")
+    
+    if self.histSig is not None: 
+      self.histSig.Scale(self.data.Integral() / self.histSig.Integral())
+      self.histSig.SetLineColor(2)
+      
+      self.histSig.Draw("same HIST")
+      if self.leg is not None: self.leg.AddEntry(self.histSig, "signal (scaled)", "l")
+    
+    if self.leg is not None: self.leg.Draw("same")
+    
+    pads[ 0 ].Update()
+    
+    if self.doRatio:
+      pads[ 1 ].cd()
+      pads[ 1 ].SetGridy()
+      
+      setMargins(pads[ 1 ], self.doRatio)
+      self.hratio.SetLineColor(1)
+      
+      self.hratio.Draw("e")
+      
+      self.hratio.SetMaximum(1 + self.ratioRange)
+      self.hratio.SetMinimum(1 - self.ratioRange)
+      # hratio.SetMaximum(2)
+      # hratio.SetMinimum(0)
+    
+    for p in pads:
+      p.RedrawAxis()
+      p.Modified()
+      p.Update()
+    
+    canv.cd()
+    
+    #iPos = 0 # in frame
+    iPos = 11 # out frame
+    if iPos == 0:
+      self.cmsLumi.relPosX = 0.1
+    self.cmsLumi.CMS_lumi(pads[ 0 ], 0, iPos)
+    
+    canv.Modified()
+    canv.Update()
+    return copy.deepcopy(canv)
+
+
