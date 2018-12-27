@@ -373,11 +373,7 @@ def drawRatioPlot(name, cmsLumi, mclist, data, x_name, y_name, doLog=False, doRa
 
 
 class TH1drawer: 
-  def __init__(self): 
-    self.doLog = False
-    self.doLogX = False
-    self.doRatio = True
-    
+  def __init__(self, cmsLumi = None, listMC = None, histRD = None, strXLabel = "", strYLabel = "", bDoLog = False, bDoRatio = True): 
     self.ratioMax = 1.8
     self.minPlot = None
     
@@ -402,11 +398,18 @@ class TH1drawer:
     
     self.ytitleoffset = 1.35
     
-    self.cmsLumi = None
-    self.mclist = None
+    self.cmsLumi = cmsLumi
+    self.mclist = listMC 
     
-    self.data = None
+    self.data = histRD
     self.histSig = None
+    
+    self.x_name = strXLabel
+    self.y_name = strYLabel
+    
+    self.doLog = bDoLog
+    self.doLogX = False
+    self.doRatio = bDoRatio
   
   # You must call at least once the Set methods in the followings before drawing
   
