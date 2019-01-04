@@ -543,6 +543,10 @@ class TH1drawer:
       self.strDrawOption = ""
   
   
+  def DrawBasePlot(self): 
+    self.hBase.Draw(self.strDrawOption)
+  
+  
   def DrawMCPlots(self, option = ""): 
     self.hs.Draw("same" + option)
   
@@ -601,7 +605,7 @@ class TH1drawer:
     
     if self.minPlot is not None: self.hBase.SetMinimum(self.minPlot)
     
-    self.hBase.Draw(self.strDrawOption)
+    self.DrawBasePlot()
     self.DrawMCPlots()
     if self.data is not None: self.data.Draw("esamex0")
     
