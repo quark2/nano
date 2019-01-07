@@ -414,13 +414,18 @@ queue %(queue)i
     fListSrc.close()
     
     strPattern = dicMain[ "filepattern" ].encode("ascii", "ignore")
-    dicPattern = GetInfoFromFormat(strSrc, initFormat(strPattern))
+    initformCurr = initFormat(strPattern)
     
-    listInfoFriend = None
+    dicPattern = GetInfoFromFormat(strSrc, initformCurr)
+    
+    dicInfoFriend = None
     if strPathFriend is not None: 
-      fListFriend = open(strPathFriend, "rb")
-      listInfoFriend = fListFriend.readlines()[ nIdxJob ].split()
-      fListFriend.close()
+      strPathOneFriend = ""
+      with open(strPathFriend, "rb") as fListFriend: 
+        strPathOneFriend = fListFriend.readlines()[ nIdxJob ].splitlines(False)[ 0 ]
+      
+      dicInfoFriend = GetInfoFromFormat(strPathOneFriend, initformCurr)
+      dicInfoFriend[ "fullpath" ] = strPathOneFriend
     
     strDataset = dicPattern[ "dataset" ]
     
@@ -446,7 +451,7 @@ queue %(queue)i
     strNameFriend = None
     
     if strPathFriend is not None: 
-      dicOutInfo[ "friend" ] = listInfoFriend[ 2 ]
+      dicOutInfo[ "friend" ] = dicInfoFriend[ "fullpath" ]
       strNameFriend = dicMain[ "friendname" ].encode("ascii", "ignore")
     
     dicHist = {}
@@ -481,11 +486,12 @@ queue %(queue)i
         if not ( not tFriend.GetTree() ): break
         
         time.sleep(10)
-        tFriend = tree.AddFriend(strNameTree, dicOutInfo[ "friend" ])
+        tFriend = tree.AddFriend(strNameFriend, dicOutInfo[ "friend" ])
         nTrial += 1
       
       if nTrial >= 5: 
-        sys.stderr.write("#%i: Failed to open %s"%(nIdxJob, dicOutInfo[ "friend" ]))
+        sys.stderr.write("#%i: Failed to open %s with %s"%(nIdxJob, 
+          dicOutInfo[ "friend" ], dicOutInfo[ "ntuple" ]))
         return
     
     # Applying the cut
